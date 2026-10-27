@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Тесты — Гараж Канина</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      padding: 32px 16px 64px;
+      background: #06080C;
+      color: #E6E2D6;
+      font: 15px/1.5 "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    }
+    main { max-width: 900px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 26px; }
+    #summary { margin: 0 0 24px; color: #8C9BAA; }
+    #summary.is-pass { color: #8fd18a; }
+    #summary.is-fail { color: #FF3B22; }
+    ol { margin: 0; padding: 0; list-style: none; }
+    li { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(140, 155, 170, 0.12); }
+    li .mark { text-align: center; }
+    li.pass .mark { color: #8fd18a; }
+    li.fail .mark { color: #FF3B22; }
+    li.skip { color: #6d7782; }
+    li .ms { color: #6d7782; font-variant-numeric: tabular-nums; }
+    li pre { grid-column: 2 / -1; margin: 4px 0 0; white-space: pre-wrap; color: #ffb2a6; font: 12px/1.45 Consolas, monospace; }
+    canvas { position: fixed; left: -9999px; width: 320px; height: 180px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Тесты</h1>
+    <p id="summary">Загружаю…</p>
+    <ol id="results"></ol>
+  </main>
+  <!-- RendererService ищет #game: тесты мира строят сцену на этом канвасе -->
+  <canvas id="game"></canvas>
+
+  <script src="manifest.js"></script>
+  <script src="lib/gk-test.js"></script>
+  <script src="lib/fakes.js"></script>
+  <script>
+    (function () {
+      'use strict';
+      const manifest = window.GK_TEST_MANIFEST;
+      const files = ['../vendor/three.min.js']
+        .concat(manifest.sources.map((s) => '../' + s))
+        .concat(manifest.specs);
+      const summary = document.getElementById('summary');
+      let loaded = 0;
+
+      // async = false сохраняет порядок выполнения скриптов
+      files.forEach((src) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = false;
+        script.onload = () => { if (++loaded === files.length) start(); };
+        script.onerror = () => {
+          summary.textContent = 'Не загрузился файл ' + src;
+          summary.className = 'is-fail';
+        };
+        document.body.appendChild(script);
+      });
+
+      async function start() {
+        summary.textContent = 'Выполняю…';
+        const results = await GKTest.run({ env: 'browser' });
+        const list = document.getElementById('results');
+        const count = (s) => results.filter((r) => r.status === s).length;
+        results.forEach((r) => {
+          const li = document.createElement('li');
+          li.className = r.status;
+          li.innerHTML = '<span class="mark"></span><span class="name"></span><span class="ms"></span>';
+          li.querySelector('.mark').textContent = r.status === 'pass' ? '✓' : r.status === 'fail' ? '✗' : '–';
+          li.querySelector('.name').textContent = r.name;
+          li.querySelector('.ms').textContent = r.ms != null ? r.ms + ' мс' : '';
+          if (r.error) {
+            const pre = document.createElement('pre');
+            pre.textContent = r.error.message + '\n' + String(r.error.stack || '').split('\n').slice(1, 4).join('\n');
+            li.appendChild(pre);
+          }
+          list.appendChild(li);
+        });
+        const failed = count('fail');
+        summary.textContent = failed
+          ? 'Упало: ' + failed + ' из ' + results.length + '. Прошло: ' + count('pass') + '.'
+          : 'Все тесты прошли: ' + count('pass') + (count('skip') ? ', пропущено ' + count('skip') : '') + '.';
+        summary.className = failed ? 'is-fail' : 'is-pass';
+        document.title = (failed ? '✗ ' : '✓ ') + count('pass') + '/' + results.length + ' — тесты';
+      }
+    })();
+  </script>
+</body>
+</html>

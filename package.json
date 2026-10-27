@@ -1,0 +1,10 @@
+{
+  "name": "garazh-kanina",
+  "version": "0.1.0",
+  "description": "Рутинный хоррор про зимние гаражи. Ванильный JS, архитектура в стиле NestJS, запуск без сервера.",
+  "private": true,
+  "scripts": {
+    "test": "node test/run-node.js"
+  },
+  "license": "UNLICENSED"
+}

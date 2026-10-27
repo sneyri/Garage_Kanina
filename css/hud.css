@@ -1,0 +1,500 @@
+/* Интерфейс в игре, телефон, отладка */
+
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: none;
+  pointer-events: none;
+}
+
+body[data-state="playing"] .hud {
+  display: block;
+}
+
+/* ---------- прицел и подсказка ---------- */
+
+.crosshair {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: rgba(230, 226, 214, 0.55);
+  transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+}
+
+.crosshair.is-active {
+  background: var(--led);
+  box-shadow: 0 0 6px 2px rgba(255, 59, 34, 0.7);
+  transform: scale(1.7);
+}
+
+.hold-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  opacity: 0;
+  transform: rotate(-90deg);
+}
+
+.hold-ring.is-visible {
+  opacity: 1;
+}
+
+.hold-ring circle {
+  fill: none;
+  stroke-width: 2.5;
+}
+
+.ring-bg {
+  stroke: rgba(230, 226, 214, 0.15);
+}
+
+.ring-fg {
+  stroke: var(--led);
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px rgba(255, 59, 34, 0.8));
+}
+
+.prompt {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 34px);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: var(--step-0);
+  text-shadow: 0 1px 3px #000, 0 0 12px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+}
+
+.prompt.is-visible {
+  opacity: 1;
+}
+
+.prompt.is-disabled {
+  color: var(--frost);
+}
+
+.prompt.is-disabled .key {
+  display: none;
+}
+
+.prompt .key {
+  background: rgba(6, 8, 12, 0.55);
+}
+
+/* ---------- записка со списком дел ---------- */
+
+.note {
+  position: absolute;
+  top: 26px;
+  left: 26px;
+  width: 268px;
+  padding: 20px 18px 14px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.55);
+  transform: rotate(-1.3deg);
+  transition: opacity 1.2s ease;
+}
+
+/* полоска малярного скотча */
+.note::before {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 92px;
+  height: 22px;
+  margin-left: -46px;
+  background: rgba(214, 200, 160, 0.82);
+  transform: rotate(2.5deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.note.is-idle {
+  opacity: 0.5;
+}
+
+.note-head {
+  margin: 0 0 10px;
+  font-size: var(--step-1);
+  line-height: 1.15;
+}
+
+.note-head span {
+  font-weight: 400;
+}
+
+.note-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task {
+  display: grid;
+  grid-template-columns: 16px 1fr auto;
+  align-items: start;
+  gap: 9px;
+  padding: 4px 0;
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.task-box {
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border: 1.5px solid var(--ink);
+  position: relative;
+}
+
+.task-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.task.is-done .task-box::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: -3px;
+  width: 5px;
+  height: 11px;
+  border: solid #8d1d10;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(40deg);
+}
+
+.task.is-done .task-label {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.task.is-done,
+.task.is-locked {
+  opacity: 0.5;
+}
+
+/* ---------- руки, субтитры, уведомления ---------- */
+
+.hand {
+  position: absolute;
+  right: 28px;
+  bottom: 24px;
+  color: var(--paint-dim);
+  text-shadow: 0 1px 3px #000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hand.is-visible {
+  opacity: 1;
+}
+
+.subtitles {
+  position: absolute;
+  left: 50%;
+  bottom: 12vh;
+  width: min(68ch, calc(100vw - 32px));
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: var(--step-1);
+  line-height: 1.35;
+  text-shadow: 0 1px 2px #000, 0 0 14px rgba(0, 0, 0, 0.95);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.subtitles.is-visible {
+  opacity: 1;
+}
+
+.sub-speaker {
+  margin-right: 6px;
+}
+
+.subtitles[data-speaker="kanin"] .sub-speaker {
+  color: var(--led);
+}
+
+.subtitles[data-speaker="caller"] .sub-speaker {
+  color: var(--peach);
+}
+
+.subtitles[data-speaker="thought"] {
+  font-style: italic;
+  color: var(--frost);
+}
+
+.toast {
+  position: absolute;
+  top: 26px;
+  left: 50%;
+  max-width: calc(100vw - 340px);
+  padding: 8px 16px;
+  transform: translate(-50%, -8px);
+  background: rgba(6, 8, 12, 0.78);
+  border-left: 3px solid var(--sodium);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.hints {
+  position: absolute;
+  left: 26px;
+  bottom: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  max-width: calc(100vw - 320px);
+  font-size: var(--step--1);
+  color: var(--paint-dim);
+  text-shadow: 0 1px 3px #000;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+body.show-hints .hints {
+  opacity: 1;
+}
+
+/* ---------- телефон (как экран звонка на фото) ---------- */
+
+.phone {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 12;
+  width: 236px;
+  height: 470px;
+  overflow: hidden;
+  border: 7px solid #0c0d0f;
+  border-radius: 34px;
+  background: #3b2620;
+  font-family: var(--font-phone);
+  color: #fff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+  transform: translateY(calc(100% + 40px));
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.phone.is-open {
+  transform: translateY(0);
+}
+
+.phone.is-ringing {
+  animation: phone-buzz 2.3s infinite;
+}
+
+@keyframes phone-buzz {
+  0%, 22%, 100% { translate: 0 0; }
+  2%, 6%, 10%, 14%, 18% { translate: -2px 0; }
+  4%, 8%, 12%, 16%, 20% { translate: 2px 0; }
+}
+
+/* если фото нет — тёмный силуэт на красном фоне */
+.phone-silhouette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 45% 34%, #1a1210 0 17%, transparent 17.5%),
+    radial-gradient(ellipse at 50% 92%, #1a1210 0 36%, transparent 36.5%),
+    linear-gradient(170deg, #5a3a2c, #6b1b14 70%, #2a1410);
+}
+
+.phone-photo {
+  position: absolute;
+  inset: -6px;
+  background-size: cover;
+  background-position: 50% 30%;
+  filter: blur(1.5px) brightness(0.62) saturate(0.85);
+}
+
+.phone-status {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 18px 0;
+  font-size: 11px;
+}
+
+.phone-state {
+  position: relative;
+  margin: 26px 0 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.phone-name {
+  position: relative;
+  margin: 8px 12px 0;
+  text-align: center;
+  font-size: 25px;
+  line-height: 1.15;
+  color: var(--peach);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.phone-grid {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 220px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 6px;
+  font-size: 8.5px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.phone-grid span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.phone-grid i {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  font-style: normal;
+  font-size: 15px;
+}
+
+.phone.is-talking .phone-grid {
+  opacity: 1;
+}
+
+.phone-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  display: flex;
+  justify-content: space-around;
+  font-size: 12px;
+}
+
+.phone-actions span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.phone-actions b {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  font-size: 16px;
+}
+
+.phone-answer b {
+  background: #2f9e4f;
+}
+
+.phone-decline b {
+  background: #d93a30;
+}
+
+.phone-hangup {
+  display: none;
+}
+
+/* ---------- отладка ---------- */
+
+.debug {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 40;
+  display: none;
+  width: 250px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(140, 155, 170, 0.3);
+  font-size: 12px;
+}
+
+.debug.is-open {
+  display: block;
+}
+
+.debug-title {
+  margin: 0 0 8px;
+  color: var(--frost);
+}
+
+.debug-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.debug-buttons button {
+  padding: 4px 7px;
+  border: 1px solid rgba(140, 155, 170, 0.35);
+  border-radius: 2px;
+  background: #11151c;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.debug-buttons button:hover,
+.debug-buttons button:focus-visible {
+  border-color: var(--led);
+  outline: none;
+}
+
+.debug-info {
+  margin: 10px 0 0;
+  font: 11px/1.45 Consolas, "Courier New", monospace;
+  color: var(--paint-dim);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 760px) {
+  .note {
+    width: 220px;
+    top: 16px;
+    left: 16px;
+  }
+
+  .phone {
+    right: 16px;
+    bottom: 16px;
+    transform-origin: bottom right;
+    scale: 0.8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .phone.is-ringing {
+    animation: none;
+  }
+}

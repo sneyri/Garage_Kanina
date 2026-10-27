@@ -1,0 +1,415 @@
+/* Заставка, главное меню, настройки, пауза, карточки дня */
+
+/* ---------- заставка ---------- */
+
+body[data-state="boot"] #boot {
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.88);
+  cursor: pointer;
+}
+
+.boot-box {
+  padding: 0 var(--gutter);
+  text-align: center;
+  color: var(--paint-dim);
+}
+
+.boot-box p {
+  margin: 0 0 10px;
+}
+
+.boot-press {
+  margin-top: 28px !important;
+  color: var(--paint);
+  animation: boot-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes boot-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* ---------- главное меню поверх живой сцены ---------- */
+
+body[data-state="menu"] #menu {
+  display: block;
+}
+
+.menu-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6, 8, 12, 0.82) 0%, rgba(6, 8, 12, 0.55) 34%, rgba(6, 8, 12, 0) 62%);
+}
+
+.menu-panel {
+  position: absolute;
+  left: var(--gutter);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: min(620px, calc(100vw - 2 * var(--gutter)));
+}
+
+.title {
+  margin: 0;
+  line-height: 0;
+}
+
+.title-svg {
+  width: min(560px, 100%);
+  height: auto;
+  overflow: visible;
+  animation: spray-in 1.8s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+
+.title-svg text {
+  font-size: 128px;
+  letter-spacing: 2px;
+}
+
+/* надпись «напыляется» слева направо один раз при открытии меню */
+@keyframes spray-in {
+  from { clip-path: inset(0 100% 0 0); -webkit-clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); -webkit-clip-path: inset(0 0 0 0); }
+}
+
+.tagline {
+  margin: 18px 0 44px 6px;
+  max-width: 40ch;
+  font-size: var(--step-1);
+  color: var(--frost);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.touch-note {
+  display: none;
+  margin: 24px 0 0 30px;
+  color: var(--sodium);
+}
+
+@media (pointer: coarse) {
+  .touch-note {
+    display: block;
+  }
+}
+
+.weather {
+  position: absolute;
+  top: 28px;
+  right: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
+
+.weather-temp {
+  font-size: var(--step-3);
+  font-weight: 700;
+  color: var(--paint);
+}
+
+.weather-time {
+  margin-top: 6px;
+  color: var(--frost);
+}
+
+.version {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 22px;
+  font-size: var(--step--1);
+  color: rgba(140, 155, 170, 0.6);
+}
+
+/* ---------- «Как играть» ---------- */
+
+.keys {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 12px 18px;
+  margin: 0;
+}
+
+.keys dt {
+  display: flex;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.keys dd {
+  margin: 0;
+  color: var(--paint-dim);
+}
+
+/* ---------- настройки ---------- */
+
+.settings-group {
+  padding: 18px 0;
+  border-top: 1px solid rgba(140, 155, 170, 0.18);
+}
+
+.field {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin-bottom: 16px;
+}
+
+.field output {
+  color: var(--frost);
+  font-variant-numeric: tabular-nums;
+}
+
+.field input[type="range"],
+.field select {
+  grid-column: 1 / -1;
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: rgba(140, 155, 170, 0.45);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: rgba(140, 155, 170, 0.45);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -6px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paint);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paint);
+}
+
+input[type="range"]:focus-visible {
+  outline: none;
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb,
+input[type="range"]:active::-webkit-slider-thumb {
+  background: var(--led);
+  box-shadow: 0 0 8px 2px rgba(255, 59, 34, 0.6);
+}
+
+input[type="range"]:focus-visible::-moz-range-thumb,
+input[type="range"]:active::-moz-range-thumb {
+  background: var(--led);
+  box-shadow: 0 0 8px 2px rgba(255, 59, 34, 0.6);
+}
+
+select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(140, 155, 170, 0.35);
+  border-radius: 3px;
+  background: #0d1016;
+}
+
+select:focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 1px;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.check input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid rgba(230, 226, 214, 0.55);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.check input::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--led);
+  box-shadow: 0 0 6px 1px rgba(255, 59, 34, 0.7);
+  transform: scale(0);
+  transition: transform 0.12s ease;
+}
+
+.check input:checked::after {
+  transform: scale(1);
+}
+
+.check input:focus-visible {
+  outline: 2px solid var(--led);
+  outline-offset: 2px;
+}
+
+/* ---------- пауза ---------- */
+
+body[data-state="paused"] #pause {
+  display: flex;
+  align-items: center;
+  padding-left: var(--gutter);
+  background: rgba(6, 8, 12, 0.6);
+  -webkit-backdrop-filter: blur(5px) saturate(0.6);
+  backdrop-filter: blur(5px) saturate(0.6);
+}
+
+.pause-panel h2 {
+  margin: 0 0 20px 30px;
+  font-size: var(--step-3);
+  line-height: 1.1;
+}
+
+.pause-note {
+  margin: 28px 0 0 30px;
+  font-size: var(--step--1);
+  color: var(--frost);
+}
+
+/* ---------- карточки дня ---------- */
+
+.screen-card.is-open {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--gutter);
+  background: rgba(0, 0, 0, 0.94);
+}
+
+.card-ending.is-open,
+.card-end.is-open {
+  background: rgba(0, 0, 0, 0.88);
+}
+
+.card-box {
+  width: min(760px, 100%);
+}
+
+.card-spray {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 120px;
+  overflow: visible;
+}
+
+.card-spray text {
+  font-size: 120px;
+}
+
+.card-begin.is-open .card-spray {
+  animation: spray-in 1.4s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+
+.card-title {
+  margin: 10px 0 14px 4px;
+  font-size: var(--step-3);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.card-text {
+  margin: 0 0 32px 4px;
+  max-width: 52ch;
+  white-space: pre-line;
+  font-size: var(--step-1);
+  color: var(--frost);
+}
+
+.card-button {
+  margin-left: -26px;
+}
+
+.card-button::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- ошибка ---------- */
+
+.screen-error.is-open {
+  display: grid;
+  place-items: center;
+  z-index: 50;
+  background: var(--night);
+}
+
+.error-box {
+  max-width: 56ch;
+  padding: 0 var(--gutter);
+}
+
+.error-box h2 {
+  margin: 0 0 12px;
+  font-size: var(--step-3);
+}
+
+.error-box p {
+  color: var(--paint-dim);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+@media (max-width: 640px) {
+  .menu-item {
+    font-size: var(--step-1);
+  }
+
+  .tagline {
+    margin-bottom: 28px;
+    font-size: var(--step-0);
+  }
+
+  .weather {
+    top: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title-svg,
+  .card-begin.is-open .card-spray,
+  .boot-press {
+    animation: none;
+  }
+}

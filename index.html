@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Гараж Канина</title>
+  <meta name="description" content="Рутинный хоррор: зимние гаражи, уборка, питбайк и запертый подвал.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2306080C'/%3E%3Ccircle cx='8' cy='8' r='3' fill='%23FF3B22'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/hud.css">
+</head>
+<body data-state="boot">
+  <!-- Общие SVG-фильтры: краска из баллончика по трафарету -->
+  <svg class="svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <filter id="spray" x="-4%" y="-10%" width="108%" height="120%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="noise"/>
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="6" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+        <feGaussianBlur in="rough" stdDeviation="0.5" result="edge"/>
+        <feGaussianBlur in="SourceAlpha" stdDeviation="6" result="halo"/>
+        <feComponentTransfer in="halo" result="mist"><feFuncA type="linear" slope="0.22"/></feComponentTransfer>
+        <feFlood flood-color="#E6E2D6" result="paint"/>
+        <feComposite in="paint" in2="mist" operator="in" result="overspray"/>
+        <feMerge><feMergeNode in="overspray"/><feMergeNode in="edge"/></feMerge>
+      </filter>
+    </defs>
+  </svg>
+
+  <canvas id="game" aria-label="Игровая сцена"></canvas>
+
+  <div class="fx fx-vignette"></div>
+  <div class="fx fx-frost"></div>
+  <div class="fx fx-grain" id="fx-grain"></div>
+  <div class="fx fx-scare" id="fx-scare"></div>
+
+  <!-- Заставка: первое нажатие разрешает браузеру звук -->
+  <section class="screen screen-boot" id="boot">
+    <div class="boot-box">
+      <p>Игра со звуком. Лучше в наушниках и в темноте.</p>
+      <p class="boot-press">Нажмите любую клавишу</p>
+    </div>
+  </section>
+
+  <!-- Главное меню -->
+  <section class="screen screen-menu" id="menu">
+    <div class="menu-shade"></div>
+    <div class="menu-panel">
+      <h1 class="title">
+        <svg class="title-svg" viewBox="0 0 620 270" role="img" aria-label="Гараж Канина">
+          <defs>
+            <mask id="stencil-title">
+              <rect width="620" height="270" fill="#fff"/>
+              <rect x="0" y="66" width="620" height="5" fill="#000"/>
+              <rect x="0" y="196" width="620" height="5" fill="#000"/>
+            </mask>
+          </defs>
+          <g filter="url(#spray)">
+            <g mask="url(#stencil-title)" class="paint">
+              <text x="4" y="118" textLength="560" lengthAdjust="spacingAndGlyphs">ГАРАЖ</text>
+              <text x="4" y="250" textLength="610" lengthAdjust="spacingAndGlyphs">КАНИНА</text>
+            </g>
+          </g>
+        </svg>
+      </h1>
+      <p class="tagline">Зима. Гаражи. Каждый вечер одно и то же.</p>
+
+      <nav class="menu-list" aria-label="Главное меню">
+        <button class="menu-item" data-action="menu/continue" id="btn-continue"><span>Продолжить</span><small id="continue-info"></small></button>
+        <button class="menu-item" data-action="menu/new-game" id="btn-new"><span>Новая смена</span><small id="new-info"></small></button>
+        <button class="menu-item" data-action="menu/settings"><span>Настройки</span></button>
+        <button class="menu-item" data-action="menu/about"><span>Как играть</span></button>
+      </nav>
+      <p class="touch-note">Для игры нужны клавиатура и мышь.</p>
+    </div>
+    <aside class="weather" aria-label="Погода">
+      <span class="weather-temp">−24°</span>
+      <span class="weather-time" id="menu-time">18:24</span>
+    </aside>
+    <span class="version">прототип 0.1</span>
+  </section>
+
+  <!-- Как играть -->
+  <section class="panel" id="about" aria-label="Как играть">
+    <h2>Как играть</h2>
+    <p class="panel-lead">Приходишь в гараж, говоришь с Каниным и делаешь то, что он скажет. Когда всё готово — закрываешь ворота. Наутро новый день.</p>
+    <dl class="keys">
+      <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>Идти</dd>
+      <dt><kbd>Shift</kbd></dt><dd>Бежать</dd>
+      <dt><kbd>Мышь</kbd></dt><dd>Смотреть</dd>
+      <dt><kbd>E</kbd></dt><dd>Взять, поставить, поговорить. Некоторые дела нужно удерживать</dd>
+      <dt><kbd>F</kbd></dt><dd>Налобный фонарь</dd>
+      <dt><kbd>G</kbd></dt><dd>Бросить то, что в руках</dd>
+      <dt><kbd>Y</kbd><kbd>N</kbd></dt><dd>Ответить на звонок или сбросить</dd>
+      <dt><kbd>Esc</kbd></dt><dd>Пауза</dd>
+      <dt><kbd>F2</kbd></dt><dd>Отладка: вызвать любую пугалку</dd>
+    </dl>
+    <p class="panel-note">Клавиши работают и на русской раскладке.</p>
+    <div class="panel-actions"><button class="btn" data-action="menu/back">Понятно</button></div>
+  </section>
+
+  <!-- Настройки -->
+  <section class="panel" id="settings" aria-label="Настройки">
+    <h2>Настройки</h2>
+    <div class="settings-group">
+      <label class="field"><span>Общая громкость</span><output data-for="masterVolume"></output>
+        <input type="range" min="0" max="1" step="0.05" data-key="masterVolume" data-action="settings/change"></label>
+      <label class="field"><span>Музыка</span><output data-for="musicVolume"></output>
+        <input type="range" min="0" max="1" step="0.05" data-key="musicVolume" data-action="settings/change"></label>
+      <label class="field"><span>Звуки</span><output data-for="sfxVolume"></output>
+        <input type="range" min="0" max="1" step="0.05" data-key="sfxVolume" data-action="settings/change"></label>
+    </div>
+    <div class="settings-group">
+      <label class="field"><span>Чувствительность мыши</span><output data-for="sensitivity"></output>
+        <input type="range" min="0.2" max="3" step="0.1" data-key="sensitivity" data-action="settings/change"></label>
+      <label class="field"><span>Угол обзора</span><output data-for="fov"></output>
+        <input type="range" min="55" max="95" step="1" data-key="fov" data-action="settings/change"></label>
+      <label class="field"><span>Яркость</span><output data-for="brightness"></output>
+        <input type="range" min="0.5" max="2" step="0.05" data-key="brightness" data-action="settings/change"></label>
+      <label class="field field-select"><span>Графика</span>
+        <select data-key="quality" data-action="settings/change">
+          <option value="low">Низкая, крупные пиксели</option>
+          <option value="medium">Средняя</option>
+          <option value="high">Высокая</option>
+        </select></label>
+    </div>
+    <div class="settings-group">
+      <label class="check"><input type="checkbox" data-key="invertY" data-action="settings/change"><span>Инвертировать мышь по вертикали</span></label>
+      <label class="check"><input type="checkbox" data-key="headBob" data-action="settings/change"><span>Покачивание головы при ходьбе</span></label>
+      <label class="check"><input type="checkbox" data-key="grain" data-action="settings/change"><span>Плёночное зерно</span></label>
+    </div>
+    <p class="panel-note" id="storage-info"></p>
+    <div class="panel-actions">
+      <button class="btn btn-quiet" data-action="settings/reset">Сбросить</button>
+      <button class="btn" data-action="settings/close">Готово</button>
+    </div>
+  </section>
+
+  <!-- Пауза -->
+  <section class="screen screen-pause" id="pause">
+    <div class="pause-panel">
+      <h2>Пауза</h2>
+      <nav class="menu-list" aria-label="Пауза">
+        <button class="menu-item" data-action="pause/resume"><span>Продолжить</span></button>
+        <button class="menu-item" data-action="pause/settings"><span>Настройки</span></button>
+        <button class="menu-item" data-action="pause/to-menu"><span>Выйти в меню</span></button>
+      </nav>
+      <p class="pause-note">Если выйти, день начнётся заново.</p>
+    </div>
+  </section>
+
+  <!-- Интерфейс в игре -->
+  <section class="hud" id="hud">
+    <div class="crosshair" id="crosshair"></div>
+    <svg class="hold-ring" id="hold-ring" viewBox="0 0 44 44" aria-hidden="true">
+      <circle class="ring-bg" cx="22" cy="22" r="18"/>
+      <circle class="ring-fg" id="ring-fg" cx="22" cy="22" r="18"/>
+    </svg>
+    <div class="prompt" id="prompt"><kbd class="key">E</kbd><span id="prompt-text"></span></div>
+
+    <aside class="note" id="tasks" aria-label="Список дел">
+      <p class="note-head"><b id="tasks-day">День 1</b> <span id="tasks-title"></span></p>
+      <ul class="note-list" id="tasks-list"></ul>
+    </aside>
+
+    <div class="hand" id="hand"></div>
+    <div class="subtitles" id="subtitles"><b class="sub-speaker" id="sub-speaker"></b> <span id="sub-text"></span></div>
+    <div class="toast" id="toast" role="status"></div>
+    <div class="hints" id="hints">
+      <span><kbd>WASD</kbd> идти</span><span><kbd>Shift</kbd> бежать</span><span><kbd>E</kbd> действие</span>
+      <span><kbd>F</kbd> фонарь</span><span><kbd>G</kbd> бросить</span><span><kbd>Esc</kbd> пауза</span>
+    </div>
+  </section>
+
+  <!-- Телефон -->
+  <section class="phone" id="phone" aria-live="polite">
+    <div class="phone-silhouette"></div>
+    <div class="phone-photo" id="phone-photo"></div>
+    <div class="phone-status"><span id="phone-clock">18:24</span><span>53%</span></div>
+    <p class="phone-state" id="phone-state">Входящий вызов…</p>
+    <p class="phone-name" id="phone-name">Смерть В Нищете</p>
+    <div class="phone-grid" aria-hidden="true">
+      <span><i>+</i>Добавить вызов</span><span><i>×</i>Выключить микрофон</span><span><i>ᛒ</i>Bluetooth</span>
+      <span><i>◁</i>Динамик</span><span><i>⁙</i>Клавиатура</span><span><i>⋮</i>Ещё</span>
+    </div>
+    <div class="phone-actions" id="phone-actions"></div>
+    <div class="phone-hangup" aria-hidden="true"></div>
+  </section>
+
+  <!-- Карточки дня -->
+  <section class="screen screen-card" id="card">
+    <div class="card-box">
+      <svg class="card-spray" viewBox="0 0 1400 150" preserveAspectRatio="xMinYMid meet" aria-hidden="true">
+        <g filter="url(#spray)"><text class="paint" x="4" y="122" id="card-kicker">День 1</text></g>
+      </svg>
+      <h2 class="card-title" id="card-title">Уборка</h2>
+      <p class="card-text" id="card-text"></p>
+      <button class="menu-item card-button" id="card-button" data-action="card/continue"><span>Продолжить</span></button>
+    </div>
+  </section>
+
+  <!-- Отладка (F2) -->
+  <section class="debug" id="debug" aria-label="Отладка">
+    <p class="debug-title">Отладка — F2</p>
+    <div class="debug-buttons" id="debug-buttons"></div>
+    <pre class="debug-info" id="debug-info"></pre>
+  </section>
+
+  <!-- Ошибка запуска -->
+  <section class="screen screen-error" id="error">
+    <div class="error-box">
+      <h2>Игра не запустилась</h2>
+      <p id="error-text"></p>
+    </div>
+  </section>
+
+  <noscript><p class="noscript">Для игры нужен JavaScript.</p></noscript>
+
+  <!--
+    Обычные <script>, а не ES-модули: модули не грузятся с file://,
+    а так игра открывается двойным кликом в любом браузере.
+    Порядок важен: сначала то, от чего зависят остальные.
+  -->
+  <script src="vendor/three.min.js"></script>
+
+  <!-- ядро в стиле NestJS -->
+  <script src="src/core/reflector.js"></script>
+  <script src="src/core/decorators.js"></script>
+  <script src="src/core/logger.js"></script>
+  <script src="src/core/container.js"></script>
+  <script src="src/core/router.js"></script>
+  <script src="src/core/nest-factory.js"></script>
+
+  <!-- общее -->
+  <script src="src/common/math.js"></script>
+  <script src="src/common/dom.js"></script>
+  <script src="src/common/tokens.js"></script>
+  <script src="src/common/geometry.js"></script>
+
+  <!-- модули -->
+  <script src="src/modules/shared/event-bus.service.js"></script>
+  <script src="src/modules/shared/shared.module.js"></script>
+
+  <script src="src/modules/storage/local-storage.service.js"></script>
+  <script src="src/modules/storage/cookie.service.js"></script>
+  <script src="src/modules/storage/memory-storage.service.js"></script>
+  <script src="src/modules/storage/storage.service.js"></script>
+  <script src="src/modules/storage/save.service.js"></script>
+  <script src="src/modules/storage/storage.module.js"></script>
+
+  <script src="src/modules/settings/settings.service.js"></script>
+  <script src="src/modules/settings/settings.module.js"></script>
+
+  <script src="src/modules/game-state/game-state.service.js"></script>
+  <script src="src/modules/game-state/game-state.module.js"></script>
+
+  <script src="src/modules/input/input.service.js"></script>
+  <script src="src/modules/input/input.module.js"></script>
+
+  <script src="src/modules/audio/audio.service.js"></script>
+  <script src="src/modules/audio/sfx.service.js"></script>
+  <script src="src/modules/audio/music.service.js"></script>
+  <script src="src/modules/audio/audio.module.js"></script>
+
+  <script src="src/modules/engine/renderer.service.js"></script>
+  <script src="src/modules/engine/loop.service.js"></script>
+  <script src="src/modules/engine/engine.module.js"></script>
+
+  <script src="src/modules/world/layout.js"></script>
+  <script src="src/modules/world/textures.service.js"></script>
+  <script src="src/modules/world/materials.service.js"></script>
+  <script src="src/modules/world/colliders.service.js"></script>
+  <script src="src/modules/world/props.factory.js"></script>
+  <script src="src/modules/world/garage-row.builder.js"></script>
+  <script src="src/modules/world/kanin-garage.builder.js"></script>
+  <script src="src/modules/world/snow.service.js"></script>
+  <script src="src/modules/world/world.service.js"></script>
+  <script src="src/modules/world/cinematic.service.js"></script>
+  <script src="src/modules/world/world.module.js"></script>
+
+  <script src="src/modules/player/player.service.js"></script>
+  <script src="src/modules/player/flashlight.service.js"></script>
+  <script src="src/modules/player/hands.service.js"></script>
+  <script src="src/modules/player/interaction.service.js"></script>
+  <script src="src/modules/player/player.module.js"></script>
+
+  <script src="src/modules/npc/character.factory.js"></script>
+  <script src="src/modules/npc/dialogue.service.js"></script>
+  <script src="src/modules/npc/kanin.service.js"></script>
+  <script src="src/modules/npc/npc.module.js"></script>
+
+  <script src="src/modules/days/days.config.js"></script>
+  <script src="src/modules/days/tasks.service.js"></script>
+  <script src="src/modules/days/items.service.js"></script>
+  <script src="src/modules/days/days.service.js"></script>
+  <script src="src/modules/days/days.module.js"></script>
+
+  <script src="src/modules/horror/stalker.service.js"></script>
+  <script src="src/modules/horror/phone-call.service.js"></script>
+  <script src="src/modules/horror/scare-director.service.js"></script>
+  <script src="src/modules/horror/horror.module.js"></script>
+
+  <script src="src/modules/ui/menu.controller.js"></script>
+  <script src="src/modules/ui/settings.controller.js"></script>
+  <script src="src/modules/ui/pause.controller.js"></script>
+  <script src="src/modules/ui/card.controller.js"></script>
+  <script src="src/modules/ui/hud.controller.js"></script>
+  <script src="src/modules/ui/debug.controller.js"></script>
+  <script src="src/modules/ui/ui.module.js"></script>
+
+  <script src="src/app.module.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
